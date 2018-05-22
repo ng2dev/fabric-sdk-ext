@@ -4,7 +4,7 @@ Copyright Hyperledger and its contributors.
 SPDX-License-Identifier: Apache-2.0
 */
 
-package msp
+package vault
 
 import (
 	vault "github.com/hashicorp/vault/api"

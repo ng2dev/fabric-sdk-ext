@@ -9,7 +9,7 @@ package vault
 import (
 	"encoding/hex"
 
-	"github.com/unchainio/fabric-sdk-ext/cryptosuite/vault/internal"
+	"github.com/unchainio/fabric-sdk-ext/vault/internal"
 )
 
 func (csp *CryptoSuite) storeKeyID(ski []byte, keyID string) error {

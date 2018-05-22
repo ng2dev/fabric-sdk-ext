@@ -10,7 +10,6 @@ import (
 	"hash"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
-	"github.com/hyperledger/fabric/bccsp"
 	"github.com/pkg/errors"
 )
 
@@ -19,11 +18,11 @@ type Hasher interface {
 
 	// Hash hashes messages msg using options opts.
 	// If opts is nil, the default HashFunc function will be used.
-	Hash(msg []byte, opts bccsp.HashOpts) (hash []byte, err error)
+	Hash(msg []byte, opts core.HashOpts) (hash []byte, err error)
 
 	// GetHash returns and instance of HashFunc.Hash using options opts.
 	// If opts is nil, the default HashFunc function will be returned.
-	GetHash(opts bccsp.HashOpts) (h hash.Hash, err error)
+	GetHash(opts core.HashOpts) (h hash.Hash, err error)
 }
 
 // Hash hashes messages msg using options opts.

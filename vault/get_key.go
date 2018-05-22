@@ -9,8 +9,7 @@ package vault
 import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	"github.com/pkg/errors"
-
-	"github.com/unchainio/fabric-sdk-ext/cryptosuite/vault/internal"
+	"github.com/unchainio/fabric-sdk-ext/vault/internal"
 )
 
 // GetKey returns the key this CSP associates to

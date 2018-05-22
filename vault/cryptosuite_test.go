@@ -13,10 +13,9 @@ import (
 	"reflect"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
-	"github.com/hyperledger/fabric-sdk-go/pkg/core/cryptosuite"
 	"github.com/stretchr/testify/assert"
-
-	"github.com/unchainio/fabric-sdk-ext/cryptosuite/vault"
+	"github.com/unchainio/fabric-sdk-ext/cryptosuite"
+	"github.com/unchainio/fabric-sdk-ext/vault"
 )
 
 func TestVaultCryptoSuiteImplementsInterface(t *testing.T) {

@@ -10,7 +10,7 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	"github.com/hyperledger/fabric/bccsp"
 	"github.com/pkg/errors"
-	"github.com/unchainio/fabric-sdk-ext/cryptosuite/vault/internal"
+	"github.com/unchainio/fabric-sdk-ext/vault/internal"
 )
 
 // KeyGen generates a key using opts.

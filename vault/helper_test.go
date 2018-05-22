@@ -34,7 +34,7 @@ import (
 	vaulthttp "github.com/hashicorp/vault/http"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	"github.com/hyperledger/fabric/bccsp/utils"
-	"github.com/unchainio/fabric-sdk-ext/cryptosuite/vault"
+	"github.com/unchainio/fabric-sdk-ext/vault"
 )
 
 func testVerificationFlow(tb testing.TB, csp *vault.CryptoSuite, ski []byte, digest []byte) {

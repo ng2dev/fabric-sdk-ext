@@ -12,12 +12,11 @@ import (
 
 	vault "github.com/hashicorp/vault/api"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
-	"github.com/pkg/errors"
-	"golang.org/x/crypto/sha3"
-
 	"github.com/hyperledger/fabric/bccsp"
-	"github.com/unchainio/fabric-sdk-ext/cryptosuite/vault/internal"
+
+	"github.com/pkg/errors"
+	"github.com/unchainio/fabric-sdk-ext/vault/internal"
+	"golang.org/x/crypto/sha3"
 )
 
 // Constants describing encryption algorithms
@@ -37,9 +36,12 @@ type CryptoSuite struct {
 
 // options configure a new CryptoSuite. options are set by the OptionFunc values passed to NewCryptoSuite.
 type options struct {
-	client  *vault.Client
-	hashers map[string]Hasher
-	config  core.CryptoSuiteConfig
+	client            *vault.Client
+	hashers           map[string]Hasher
+	address           string
+	token             string
+	securityAlgorithm string
+	securityLevel     int
 }
 
 // OptionFunc configures how the CryptoSuite is set up.
@@ -59,14 +61,14 @@ func NewCryptoSuite(optFuncs ...OptionFunc) (*CryptoSuite, error) {
 	}
 
 	if opts.client == nil {
-		opts.client, err = getVaultClient(opts.config)
+		opts.client, err = getVaultClient(opts.address, opts.token)
 
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	hashers := getHashers(opts.config)
+	hashers := getHashers(opts.securityAlgorithm, opts.securityLevel)
 
 	for key, hasher := range opts.hashers {
 		hashers[key] = hasher
@@ -80,12 +82,8 @@ func NewCryptoSuite(optFuncs ...OptionFunc) (*CryptoSuite, error) {
 	}, nil
 }
 
-func getHashers(cfg core.CryptoSuiteConfig) map[string]Hasher {
-	if cfg == nil {
-		return nil
-	}
-
-	defaultHasher := parseHasher(cfg.SecurityAlgorithm())
+func getHashers(algorithm string, level int) map[string]Hasher {
+	defaultHasher := parseHasher(algorithm, level)
 
 	// Set the hashers
 	hashers := make(map[string]Hasher)
@@ -102,15 +100,15 @@ func getHashers(cfg core.CryptoSuiteConfig) map[string]Hasher {
 	return hashers
 }
 
-func parseHasher(algorithm string) *internal.Hasher {
-	switch algorithm {
-	case bccsp.SHA256:
+func parseHasher(algorithm string, level int) *internal.Hasher {
+	switch {
+	case algorithm == "SHA2" && level == 256:
 		return &internal.Hasher{HashFunc: sha256.New}
-	case bccsp.SHA384:
+	case algorithm == "SHA2" && level == 384:
 		return &internal.Hasher{HashFunc: sha512.New384}
-	case bccsp.SHA3_256:
+	case algorithm == "SHA3" && level == 256:
 		return &internal.Hasher{HashFunc: sha3.New256}
-	case bccsp.SHA3_384:
+	case algorithm == "SHA3" && level == 384:
 		return &internal.Hasher{HashFunc: sha3.New384}
 
 	default:
@@ -134,21 +132,41 @@ func WithHashers(hashers map[string]Hasher) OptionFunc {
 	}
 }
 
-// FromConfig uses a core.CryptoSuiteConfig to configure the vault client of the CryptoSuite
-func FromConfig(config core.CryptoSuiteConfig) OptionFunc {
+// WithAddress allows to specify the address of the vault server to be used by the CryptoSuite
+func WithAddress(address string) OptionFunc {
 	return func(o *options) error {
-		o.config = config
+		o.address = address
 		return nil
 	}
 }
 
-func getVaultClient(config core.CryptoSuiteConfig) (*vault.Client, error) {
-	if config == nil {
-		return nil, errors.New("unable to obtain vault client configuration from nil CryptoSuiteConfig")
+// WithToken allows to specify the auth token of the vault server to be used by the CryptoSuite
+func WithToken(token string) OptionFunc {
+	return func(o *options) error {
+		o.token = token
+		return nil
 	}
+}
 
+// WithSecurityAlgorithm allows to specify the security algorithm to be used by the CryptoSuite
+func WithSecurityAlgorithm(securityAlgorithm string) OptionFunc {
+	return func(o *options) error {
+		o.securityAlgorithm = securityAlgorithm
+		return nil
+	}
+}
+
+// WithSecurityLevel allows to specify the security level to be used by the CryptoSuite
+func WithSecurityLevel(securityLevel int) OptionFunc {
+	return func(o *options) error {
+		o.securityLevel = securityLevel
+		return nil
+	}
+}
+
+func getVaultClient(address, token string) (*vault.Client, error) {
 	vaultConfig := &vault.Config{
-		Address: config.SecurityProviderAddress(),
+		Address: address,
 	}
 
 	client, err := vault.NewClient(vaultConfig)
@@ -157,7 +175,7 @@ func getVaultClient(config core.CryptoSuiteConfig) (*vault.Client, error) {
 		return nil, errors.Wrapf(err, "could not initialize Vault BCCSP for address: %s", vaultConfig.Address)
 	}
 
-	client.SetToken(config.SecurityProviderToken())
+	client.SetToken(token)
 
 	return client, nil
 }

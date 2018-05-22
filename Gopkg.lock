@@ -300,6 +300,7 @@
   version = "v1.1.0"
 
 [[projects]]
+  branch = "master"
   name = "github.com/hyperledger/fabric-sdk-go"
   packages = [
     "internal/github.com/hyperledger/fabric/bccsp",
@@ -307,24 +308,26 @@
     "internal/github.com/hyperledger/fabric/bccsp/sw",
     "internal/github.com/hyperledger/fabric/bccsp/utils",
     "internal/github.com/hyperledger/fabric/sdkpatch/logbridge",
+    "pkg/common/errors/multi",
     "pkg/common/errors/status",
     "pkg/common/logging",
     "pkg/common/providers/core",
     "pkg/common/providers/msp",
     "pkg/core/config/endpoint",
+    "pkg/core/config/lookup",
     "pkg/core/cryptosuite",
     "pkg/core/cryptosuite/bccsp/sw",
     "pkg/core/cryptosuite/bccsp/wrapper",
     "pkg/core/logging/api",
     "pkg/core/logging/metadata",
     "pkg/core/logging/modlog",
-    "pkg/util/errors/multi",
+    "pkg/util/pathvar",
+    "test/metadata",
     "third_party/github.com/hyperledger/fabric/protos/common",
     "third_party/github.com/hyperledger/fabric/protos/msp",
     "third_party/github.com/hyperledger/fabric/protos/peer"
   ]
-  revision = "ccecff43fb363c92c23975fe3580eec982a0024e"
-  version = "v1.0.0-alpha3"
+  revision = "81cbc396a6d006ee1476620fa6522f3290270bbc"
 
 [[projects]]
   branch = "master"
@@ -426,6 +429,12 @@
   packages = ["."]
   revision = "03e26c9abbbf5accb8349790bf9f41bde09d72c3"
   version = "1.0.0"
+
+[[projects]]
+  name = "github.com/spf13/cast"
+  packages = ["."]
+  revision = "8965335b8c7107321228e3e3702cab9832751bac"
+  version = "v1.2.0"
 
 [[projects]]
   name = "github.com/stretchr/testify"
@@ -560,6 +569,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "132f97d2fe8ef22944f9aac0d15a970be0fb0a3d2a532b61c69bb4f8c5de5966"
+  inputs-digest = "1548bc09aae2a18a7d1a73781680ef6aae0bb4f048d863a610eb6dc98cdba88b"
   solver-name = "gps-cdcl"
   solver-version = 1
