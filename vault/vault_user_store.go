@@ -7,6 +7,8 @@ SPDX-License-Identifier: Apache-2.0
 package vault
 
 import (
+	"strings"
+
 	vault "github.com/hashicorp/vault/api"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/msp"
 	"github.com/pkg/errors"
@@ -37,7 +39,7 @@ func NewVaultUserStore(address, token string) (*VaultUserStore, error) {
 // Store stores a user into store
 func (s *VaultUserStore) Store(user *msp.UserData) error {
 	_, err := s.client.Logical().Write(
-		"fabric/kv/users/"+user.ID+"@"+user.MSPID,
+		"fabric/kv/users/"+strings.ToLower(user.ID)+"@"+strings.ToLower(user.MSPID),
 
 		map[string]interface{}{
 			"value": string(user.EnrollmentCertificate),
@@ -52,13 +54,23 @@ func (s *VaultUserStore) Store(user *msp.UserData) error {
 
 // Load loads a user from store
 func (s *VaultUserStore) Load(id msp.IdentityIdentifier) (*msp.UserData, error) {
-	secret, err := s.client.Logical().Read("fabric/kv/users/" + id.ID + "@" + id.MSPID)
+	secret, err := s.client.Logical().Read("fabric/kv/users/" + strings.ToLower(id.ID) + "@" + strings.ToLower(id.MSPID))
 
 	if err != nil {
 		return nil, err
 	}
 
-	certString, ok := secret.Data["value"].(string)
+	if secret == nil {
+		return nil, msp.ErrUserNotFound
+	}
+
+	value, ok := secret.Data["value"]
+
+	if !ok {
+		return nil, msp.ErrUserNotFound
+	}
+
+	certString, ok := value.(string)
 
 	if !ok {
 		return nil, msp.ErrUserNotFound

@@ -34,6 +34,7 @@ import (
 	vaulthttp "github.com/hashicorp/vault/http"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	"github.com/hyperledger/fabric/bccsp/utils"
+	"github.com/pkg/errors"
 	"github.com/unchainio/fabric-sdk-ext/vault"
 )
 
@@ -56,19 +57,25 @@ func testVerificationFlow(tb testing.TB, csp *vault.CryptoSuite, ski []byte, dig
 	// Verify signature without vault
 	pubKey := parsePublicKey(tb, key)
 
-	switch pubKey := pubKey.(type) {
-	case *ecdsa.PublicKey:
-		valid, err = verifyECDSA(pubKey, signature, digest)
-		assert.NoError(tb, err)
+	valid, err = verify(tb, pubKey, signature, digest)
 
-	case *rsa.PublicKey:
-		valid, err = verifyRSA(pubKey, signature, digest)
-		assert.NoError(tb, err)
-	}
+	assert.NoError(tb, err)
 
 	if !valid {
 		tb.Fatalf("Signature verification failed.")
 	}
+}
+
+func verify(tb testing.TB, pubKey interface{}, signature []byte, digest []byte) (valid bool, err error) {
+	switch pubKey := pubKey.(type) {
+	case *ecdsa.PublicKey:
+		return verifyECDSA(pubKey, signature, digest)
+
+	case *rsa.PublicKey:
+		return verifyRSA(pubKey, signature, digest)
+	}
+
+	return false, errors.New("unsupported key type")
 }
 
 func parsePublicKey(tb testing.TB, key core.Key) interface{} {

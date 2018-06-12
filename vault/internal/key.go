@@ -66,7 +66,16 @@ type publicKey struct {
 // Bytes converts this key to its byte representation,
 // if this operation is allowed.
 func (k *publicKey) Bytes() (raw []byte, err error) {
-	raw, err = x509.MarshalPKIXPublicKey(k.pub)
+	var kpub interface{}
+
+	switch k.pub.(type) {
+	case *x509.Certificate:
+		kpub = k.pub.(*x509.Certificate).PublicKey
+	default:
+		kpub = k.pub
+	}
+
+	raw, err = x509.MarshalPKIXPublicKey(kpub)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to marshal key")
 	}

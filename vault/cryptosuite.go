@@ -12,6 +12,7 @@ import (
 
 	vault "github.com/hashicorp/vault/api"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	"github.com/hyperledger/fabric/bccsp"
 
 	"github.com/pkg/errors"
@@ -160,6 +161,29 @@ func WithSecurityAlgorithm(securityAlgorithm string) OptionFunc {
 func WithSecurityLevel(securityLevel int) OptionFunc {
 	return func(o *options) error {
 		o.securityLevel = securityLevel
+		return nil
+	}
+}
+
+// FromConfig uses a core.CryptoSuiteConfig to configure the vault client of the CryptoSuite
+func FromConfig(config core.CryptoSuiteConfig) OptionFunc {
+	return func(o *options) error {
+		//if config.SecurityProviderAddress() != "" {
+		//	o.address = config.SecurityProviderAddress()
+		//}
+		//
+		//if config.SecurityProviderToken() != "" {
+		//	o.token = config.SecurityProviderToken()
+		//}
+
+		if config.SecurityAlgorithm() != "" {
+			o.securityAlgorithm = config.SecurityAlgorithm()
+		}
+
+		if config.SecurityLevel() != 0 {
+			o.securityLevel = config.SecurityLevel()
+		}
+
 		return nil
 	}
 }

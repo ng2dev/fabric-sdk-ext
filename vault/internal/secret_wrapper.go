@@ -55,7 +55,19 @@ func (sw *SecretWrapper) KeyID() string {
 
 // ParseValue parses the value out of a vault secret's Data field
 func (sw *SecretWrapper) ParseValue() string {
-	value, _ := sw.secret.Data["value"].(string)
+	// TODO add errors?
+	if sw.secret == nil {
+		return ""
+	}
+
+	stringValue, ok := sw.secret.Data["value"]
+
+	if !ok {
+		return ""
+	}
+
+	value, _ := stringValue.(string)
+
 	return value
 }
 
