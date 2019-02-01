@@ -46,7 +46,7 @@ type ChannelProvider struct {
 }
 
 // New creates a ChannelProvider based on a context
-func New(config fab.EndpointConfig) (*ChannelProvider, error) {
+func New(discoveryType string, config fab.EndpointConfig) (*ChannelProvider, error) {
 	eventIdleTime := config.Timeout(fab.EventServiceIdle)
 	chConfigRefresh := config.Timeout(fab.ChannelConfigRefresh)
 	membershipRefresh := config.Timeout(fab.ChannelMembershipRefresh)
@@ -60,7 +60,7 @@ func New(config fab.EndpointConfig) (*ChannelProvider, error) {
 		"Discovery_Service_Cache",
 		func(key lazycache.Key) (interface{}, error) {
 			ck := key.(*cacheKey)
-			return cp.createDiscoveryService(ck.context, ck.channelConfig)
+			return cp.createDiscoveryService(discoveryType, ck.context, ck.channelConfig)
 		},
 	)
 
@@ -68,7 +68,7 @@ func New(config fab.EndpointConfig) (*ChannelProvider, error) {
 		"Selection_Service_Cache",
 		func(key lazycache.Key) (interface{}, error) {
 			ck := key.(*cacheKey)
-			return cp.createSelectionService(ck.context, ck.channelConfig)
+			return cp.createSelectionService(discoveryType, ck.context, ck.channelConfig)
 		},
 	)
 
@@ -133,8 +133,8 @@ func (cp *ChannelProvider) createEventClient(ctx context.Client, chConfig fab.Ch
 	return deliverclient.New(ctx, chConfig, discovery, opts...)
 }
 
-func (cp *ChannelProvider) createDiscoveryService(ctx context.Client, chConfig fab.ChannelCfg) (fab.DiscoveryService, error) {
-	if chConfig.HasCapability(fab.ApplicationGroupKey, fab.V1_2Capability) {
+func (cp *ChannelProvider) createDiscoveryService(discoveryType string, ctx context.Client, chConfig fab.ChannelCfg) (fab.DiscoveryService, error) {
+	if discoveryType == "dynamic" {
 		logger.Debugf("Using Dynamic Discovery based on V1_2 capability.")
 		cs := ChannelService{
 			provider:  cp,
@@ -166,13 +166,13 @@ func (cp *ChannelProvider) getDiscoveryService(context fab.ClientContext, channe
 	return discoveryService.(fab.DiscoveryService), nil
 }
 
-func (cp *ChannelProvider) createSelectionService(ctx context.Client, chConfig fab.ChannelCfg) (fab.SelectionService, error) {
+func (cp *ChannelProvider) createSelectionService(discoveryType string, ctx context.Client, chConfig fab.ChannelCfg) (fab.SelectionService, error) {
 	discovery, err := cp.getDiscoveryService(ctx, chConfig.ID())
 	if err != nil {
 		return nil, err
 	}
 
-	if chConfig.HasCapability(fab.ApplicationGroupKey, fab.V1_2Capability) {
+	if discoveryType == "dynamic" {
 		logger.Debugf("Using Fabric Selection based on V1_2 capability.")
 		return fabricselection.New(ctx, chConfig.ID(), discovery)
 	}
