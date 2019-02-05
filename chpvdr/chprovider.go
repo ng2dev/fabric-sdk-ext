@@ -13,6 +13,7 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/common/discovery/staticdiscovery"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/common/selection/dynamicselection"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/common/selection/fabricselection"
+	"github.com/hyperledger/fabric-sdk-go/pkg/client/common/selection/staticselection"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/options"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/context"
@@ -46,7 +47,7 @@ type ChannelProvider struct {
 }
 
 // New creates a ChannelProvider based on a context
-func New(discoveryType string, config fab.EndpointConfig) (*ChannelProvider, error) {
+func New(selectionProvider string, discoveryProvider string, config fab.EndpointConfig) (*ChannelProvider, error) {
 	eventIdleTime := config.Timeout(fab.EventServiceIdle)
 	chConfigRefresh := config.Timeout(fab.ChannelConfigRefresh)
 	membershipRefresh := config.Timeout(fab.ChannelMembershipRefresh)
@@ -60,7 +61,7 @@ func New(discoveryType string, config fab.EndpointConfig) (*ChannelProvider, err
 		"Discovery_Service_Cache",
 		func(key lazycache.Key) (interface{}, error) {
 			ck := key.(*cacheKey)
-			return cp.createDiscoveryService(discoveryType, ck.context, ck.channelConfig)
+			return cp.createDiscoveryService(discoveryProvider, ck.context, ck.channelConfig)
 		},
 	)
 
@@ -68,7 +69,7 @@ func New(discoveryType string, config fab.EndpointConfig) (*ChannelProvider, err
 		"Selection_Service_Cache",
 		func(key lazycache.Key) (interface{}, error) {
 			ck := key.(*cacheKey)
-			return cp.createSelectionService(discoveryType, ck.context, ck.channelConfig)
+			return cp.createSelectionService(selectionProvider, ck.context, ck.channelConfig)
 		},
 	)
 
@@ -147,6 +148,9 @@ func (cp *ChannelProvider) createDiscoveryService(discoveryType string, ctx cont
 		}
 		return dynamicdiscovery.NewChannelService(ctx, membership, chConfig.ID())
 	}
+
+	logger.Debugf("Using Static Discovery.")
+
 	return staticdiscovery.NewService(ctx.EndpointConfig(), ctx.InfraProvider(), chConfig.ID())
 }
 
@@ -166,17 +170,25 @@ func (cp *ChannelProvider) getDiscoveryService(context fab.ClientContext, channe
 	return discoveryService.(fab.DiscoveryService), nil
 }
 
-func (cp *ChannelProvider) createSelectionService(discoveryType string, ctx context.Client, chConfig fab.ChannelCfg) (fab.SelectionService, error) {
+func (cp *ChannelProvider) createSelectionService(selectionProvider string, ctx context.Client, chConfig fab.ChannelCfg) (fab.SelectionService, error) {
 	discovery, err := cp.getDiscoveryService(ctx, chConfig.ID())
 	if err != nil {
 		return nil, err
 	}
 
-	if discoveryType == "dynamic" {
-		logger.Debugf("Using Fabric Selection based on V1_2 capability.")
+	switch selectionProvider {
+	case "fabric":
+		logger.Debugf("Using Fabric Selection based on service discovery.")
 		return fabricselection.New(ctx, chConfig.ID(), discovery)
+	case "static":
+		logger.Debugf("Using Static Selection.")
+		return staticselection.NewService(discovery)
+	case "dynamic":
+		fallthrough
+	default:
+		logger.Debugf("Using Dynamic Selection.")
+		return dynamicselection.NewService(ctx, chConfig.ID(), discovery)
 	}
-	return dynamicselection.NewService(ctx, chConfig.ID(), discovery)
 }
 
 func (cp *ChannelProvider) getSelectionService(context fab.ClientContext, channelID string) (fab.SelectionService, error) {
