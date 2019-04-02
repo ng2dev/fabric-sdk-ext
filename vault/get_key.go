@@ -21,6 +21,10 @@ func (csp *CryptoSuite) GetKey(ski []byte) (core.Key, error) {
 		return nil, err
 	}
 
+	if keyID == "" {
+		return nil, errors.New("empty ski")
+	}
+
 	sw, err := csp.getKey(keyID)
 
 	if err != nil {
