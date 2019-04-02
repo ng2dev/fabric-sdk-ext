@@ -17,12 +17,12 @@ import (
 func (csp *CryptoSuite) GetKey(ski []byte) (core.Key, error) {
 	keyID, err := csp.loadKeyID(ski)
 
-	if err != nil {
-		return nil, err
-	}
-
 	if keyID == "" {
 		return nil, errors.New("empty ski")
+	}
+
+	if err != nil {
+		return nil, err
 	}
 
 	sw, err := csp.getKey(keyID)
